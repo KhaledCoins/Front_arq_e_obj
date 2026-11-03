@@ -66,7 +66,7 @@ A API não tem busca de usuários: `POST /quadros/{id}/membros` recebe o **UUID*
 
 O projeto já traz um `vercel.json`:
 
-- `rewrites` de `/api/*` para o backend (troque `https://SEU-BACKEND.exemplo.com` pela URL pública do Spring). Como o rewrite é feito no servidor da Vercel, o backend **não precisa de CORS**.
+- `rewrites` de `/api/*` para o backend (hoje `https://arqobj-final-project-kanban.onrender.com`, o backend do grupo no Render). Como o rewrite é feito no servidor da Vercel, o backend **não precisa de CORS**.
 - fallback de SPA (`/* -> /index.html`) para as rotas do React Router.
 
 Passos:
