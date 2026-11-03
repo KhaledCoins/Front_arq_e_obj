@@ -127,7 +127,9 @@ export function BoardPage() {
 
   // ---- Mutations ----
   const renumerar = (cards: CardView[]) => cards.map((c, i) => ({ ...c, posicao: i }));
-  const ordenar = (cards: CardView[] | undefined) => [...(cards ?? [])].sort((a, b) => a.posicao - b.posicao);
+  const ordenar = (cards: CardView[] | undefined) => [...(cards ?? [])].sort((a, b) => (a.posicao ?? 0) - (b.posicao ?? 0));
+  // Backend sem o campo `posicao` não reordena dentro da coluna nem insere em posição específica.
+  const suportaPosicao = [...porColuna.values()].some((lista) => lista.some((c) => typeof c.posicao === "number"));
 
   const moverCard = useMutation({
     mutationFn: ({ card, to, posicao }: { card: CardView; to: UUID; posicao?: number }) =>
@@ -261,6 +263,7 @@ export function BoardPage() {
       const { colunaId: to, posicao } = alvo;
       if (to === data.card.colunaId) {
         // Reordenação dentro da própria coluna.
+        if (!suportaPosicao) return;
         const lista = porColuna.get(to) ?? [];
         const atual = lista.findIndex((c) => c.id === data.card!.id);
         if (posicao === undefined || posicao === atual) return;
@@ -273,7 +276,7 @@ export function BoardPage() {
         toast.error(new ApiError(409, `A coluna ${destino.nome} atingiu o limite WIP de ${destino.limiteWip} cards`));
         return;
       }
-      moverCard.mutate({ card: data.card, to, posicao });
+      moverCard.mutate({ card: data.card, to, posicao: suportaPosicao ? posicao : undefined });
       return;
     }
 

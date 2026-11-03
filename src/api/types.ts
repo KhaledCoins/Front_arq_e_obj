@@ -62,8 +62,8 @@ export interface CardView {
   passosReproducao: string | null;
   // Melhoria
   storyPoints: number | null;
-  /** Ordem dentro da coluna (0 = topo). */
-  posicao: number;
+  /** Ordem dentro da coluna (0 = topo). Ausente em versões do backend sem ordenação. */
+  posicao?: number;
   etiquetas: EtiquetaView[];
   dataCriacao: string;
   dataAtualizacao: string;
