@@ -1,4 +1,5 @@
 # Kanban — Frontend
+https://front-arq-e-obj.vercel.app/entrar
 
 Interface web da API Kanban (Spring Boot). O backend fica no repositório do grupo: <https://github.com/gaborocha147-create/arqobj-final-project-kanban>. Feita com **Vite + React + TypeScript**, TanStack Query para cache/sincronização com a API, dnd-kit para arrastar cards e colunas e CSS próprio com design tokens (tema claro e escuro).
 
