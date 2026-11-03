@@ -7,6 +7,7 @@ import {
   KeyboardSensor,
   PointerSensor,
   closestCenter,
+  closestCorners,
   pointerWithin,
   rectIntersection,
   useSensor,
@@ -52,6 +53,24 @@ const keyboardCoordinates: KeyboardCoordinateGetter = (event, args) => {
   if (active?.data.current?.type !== "card" || !collisionRect) {
     return sortableKeyboardCoordinates(event, args);
   }
+  const activeCard = active.data.current?.card as CardView | undefined;
+  const centerY = collisionRect.top + collisionRect.height / 2;
+
+  // ↑ / ↓: troca de posição com o card vizinho da mesma coluna.
+  if (event.code === KeyboardCode.Up || event.code === KeyboardCode.Down) {
+    const vizinhos = droppableContainers
+      .getEnabled()
+      .filter((c) => c.id !== active.id && c.data.current?.type === "card" && (c.data.current?.card as CardView | undefined)?.colunaId === activeCard?.colunaId)
+      .map((c) => droppableRects.get(c.id))
+      .filter((r): r is NonNullable<typeof r> => Boolean(r))
+      .sort((a, b) => a.top - b.top);
+    const alvo =
+      event.code === KeyboardCode.Down
+        ? vizinhos.find((r) => r.top + r.height / 2 > centerY + 1)
+        : [...vizinhos].reverse().find((r) => r.top + r.height / 2 < centerY - 1);
+    return alvo ? { x: alvo.left, y: alvo.top } : undefined;
+  }
+
   if (event.code !== KeyboardCode.Left && event.code !== KeyboardCode.Right) return undefined;
 
   const zones = droppableContainers
@@ -107,9 +126,13 @@ export function BoardPage() {
   const isAdmin = me?.papel === "ADMIN";
 
   // ---- Mutations ----
+  const renumerar = (cards: CardView[]) => cards.map((c, i) => ({ ...c, posicao: i }));
+  const ordenar = (cards: CardView[] | undefined) => [...(cards ?? [])].sort((a, b) => a.posicao - b.posicao);
+
   const moverCard = useMutation({
-    mutationFn: ({ card, to }: { card: CardView; to: UUID }) => cardApi.mover(card.id, { colunaId: to }),
-    onMutate: async ({ card, to }) => {
+    mutationFn: ({ card, to, posicao }: { card: CardView; to: UUID; posicao?: number }) =>
+      cardApi.mover(card.id, posicao === undefined ? { colunaId: to } : { colunaId: to, posicao }),
+    onMutate: async ({ card, to, posicao }) => {
       const from = card.colunaId;
       await Promise.all([
         queryClient.cancelQueries({ queryKey: qk.cardsDaColuna(from) }),
@@ -117,8 +140,19 @@ export function BoardPage() {
       ]);
       const prevFrom = queryClient.getQueryData<CardView[]>(qk.cardsDaColuna(from));
       const prevTo = queryClient.getQueryData<CardView[]>(qk.cardsDaColuna(to));
-      queryClient.setQueryData<CardView[]>(qk.cardsDaColuna(from), (old) => old?.filter((c) => c.id !== card.id) ?? []);
-      queryClient.setQueryData<CardView[]>(qk.cardsDaColuna(to), (old) => [...(old ?? []), { ...card, colunaId: to }]);
+      if (from === to) {
+        const lista = ordenar(prevFrom);
+        const idx = lista.findIndex((c) => c.id === card.id);
+        if (idx >= 0 && posicao !== undefined) {
+          queryClient.setQueryData(qk.cardsDaColuna(from), renumerar(arrayMove(lista, idx, posicao)));
+        }
+      } else {
+        const novaOrigem = ordenar(prevFrom).filter((c) => c.id !== card.id);
+        const novoDestino = ordenar(prevTo);
+        novoDestino.splice(posicao ?? novoDestino.length, 0, { ...card, colunaId: to });
+        queryClient.setQueryData(qk.cardsDaColuna(from), renumerar(novaOrigem));
+        queryClient.setQueryData(qk.cardsDaColuna(to), renumerar(novoDestino));
+      }
       return { from, to, prevFrom, prevTo };
     },
     onError: (e, _vars, ctx) => {
@@ -170,9 +204,20 @@ export function BoardPage() {
   const collisionDetection: CollisionDetection = useCallback((args) => {
     const type = args.active.data.current?.type;
     if (type === "card") {
-      const containers = args.droppableContainers.filter((c) => c.data.current?.type === "column-drop");
-      const within = pointerWithin({ ...args, droppableContainers: containers });
-      return within.length ? within : rectIntersection({ ...args, droppableContainers: containers });
+      const containers = args.droppableContainers.filter((c) => {
+        const t = c.data.current?.type;
+        return c.id !== args.active.id && (t === "card" || t === "column-drop");
+      });
+      // Prefere o card sob o ponteiro (define a posição); senão, a zona da coluna (fim da lista).
+      const escolher = (hits: ReturnType<typeof pointerWithin>) => {
+        const card = hits.find((h) => containers.find((c) => c.id === h.id)?.data.current?.type === "card");
+        return card ? [card] : hits.length ? [hits[0]] : [];
+      };
+      const within = escolher(pointerWithin({ ...args, droppableContainers: containers }));
+      if (within.length) return within;
+      const inter = escolher(rectIntersection({ ...args, droppableContainers: containers }));
+      if (inter.length) return inter;
+      return closestCorners({ ...args, droppableContainers: containers });
     }
     const containers = args.droppableContainers.filter((c) => c.data.current?.type === "column");
     return closestCenter({ ...args, droppableContainers: containers });
@@ -184,10 +229,22 @@ export function BoardPage() {
     if (data?.type === "column" && data.coluna) setActiveColumn(data.coluna);
   }
 
+  /** Traduz o alvo do drop (card ou zona da coluna) em coluna + posição. */
+  function resolveTarget(over: DragEndEvent["over"]): { colunaId: UUID; posicao?: number } | null {
+    const data = over?.data.current as { type?: string; card?: CardView; colunaId?: UUID } | undefined;
+    if (!data) return null;
+    if (data.type === "card" && data.card) {
+      const lista = porColuna.get(data.card.colunaId) ?? [];
+      const idx = lista.findIndex((c) => c.id === data.card!.id);
+      return { colunaId: data.card.colunaId, posicao: idx < 0 ? undefined : idx };
+    }
+    if (data.type === "column-drop" && data.colunaId) return { colunaId: data.colunaId };
+    return null;
+  }
+
   function onDragOver(e: DragOverEvent) {
     if (!activeCard) return;
-    const colunaId = (e.over?.data.current as { colunaId?: UUID } | undefined)?.colunaId ?? null;
-    setOverColumnId(colunaId);
+    setOverColumnId(resolveTarget(e.over)?.colunaId ?? null);
   }
 
   function onDragEnd(e: DragEndEvent) {
@@ -199,15 +256,24 @@ export function BoardPage() {
     if (!over || !data) return;
 
     if (data.type === "card" && data.card) {
-      const to = (over.data.current as { colunaId?: UUID } | undefined)?.colunaId;
-      if (!to || to === data.card.colunaId) return;
+      const alvo = resolveTarget(over);
+      if (!alvo) return;
+      const { colunaId: to, posicao } = alvo;
+      if (to === data.card.colunaId) {
+        // Reordenação dentro da própria coluna.
+        const lista = porColuna.get(to) ?? [];
+        const atual = lista.findIndex((c) => c.id === data.card!.id);
+        if (posicao === undefined || posicao === atual) return;
+        moverCard.mutate({ card: data.card, to, posicao });
+        return;
+      }
       const destino = colunasQ.data?.find((c) => c.id === to);
       const qtd = porColuna.get(to)?.length ?? 0;
       if (destino?.limiteWip != null && qtd >= destino.limiteWip) {
         toast.error(new ApiError(409, `A coluna ${destino.nome} atingiu o limite WIP de ${destino.limiteWip} cards`));
         return;
       }
-      moverCard.mutate({ card: data.card, to });
+      moverCard.mutate({ card: data.card, to, posicao });
       return;
     }
 

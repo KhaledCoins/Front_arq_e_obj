@@ -1,6 +1,7 @@
 // Uma função por rota do backend. Os caminhos seguem exatamente os controllers Java.
 import { http } from "./client";
 import type {
+  AlterarSenhaRequest,
   CadastroUsuarioRequest,
   CardRequest,
   CardView,
@@ -35,6 +36,8 @@ export const usuarioApi = {
   cadastrar: (dados: CadastroUsuarioRequest) =>
     http.post<UsuarioView>("/usuarios", dados, false),
   login: (dados: LoginRequest) => http.post<LoginResponse>("/login", dados, false),
+  me: () => http.get<UsuarioView>("/usuarios/me"),
+  alterarSenha: (dados: AlterarSenhaRequest) => http.put<void>("/usuarios/me/senha", dados),
 };
 
 // ---- QuadroController ----

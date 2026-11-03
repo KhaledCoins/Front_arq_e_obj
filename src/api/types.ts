@@ -62,6 +62,8 @@ export interface CardView {
   passosReproducao: string | null;
   // Melhoria
   storyPoints: number | null;
+  /** Ordem dentro da coluna (0 = topo). */
+  posicao: number;
   etiquetas: EtiquetaView[];
   dataCriacao: string;
   dataAtualizacao: string;
@@ -110,6 +112,11 @@ export interface CadastroUsuarioRequest {
 }
 export type LoginRequest = CadastroUsuarioRequest;
 
+export interface AlterarSenhaRequest {
+  senhaAtual: string;
+  novaSenha: string;
+}
+
 export interface QuadroRequest {
   nome: string;
   descricao?: string | null;
@@ -138,6 +145,8 @@ export interface CardRequest {
 
 export interface MoverCardRequest {
   colunaId: UUID;
+  /** Índice de destino na coluna; omitido = fim da coluna. */
+  posicao?: number;
 }
 export interface ResponsavelCardRequest {
   usuarioId: UUID | null;
@@ -161,7 +170,7 @@ export interface EtiquetaRequest {
   cor: string;
 }
 export interface MembroQuadroRequest {
-  usuarioId: UUID;
+  email: string;
   papel: Papel;
 }
 export interface PapelMembroRequest {

@@ -1,11 +1,12 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, LogOut, Moon, Sun } from "lucide-react";
+import { ChevronRight, KeyRound, LogOut, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Menu, MenuItem, MenuLabel, MenuSep } from "@/components/ui/Menu";
+import { ChangePasswordModal } from "./ChangePasswordModal";
 
 export function Logo({ size = 26 }: { size?: number }) {
   return (
@@ -36,6 +37,7 @@ export function ThemeToggle() {
 
 export function AppShell({ crumbs, children }: { crumbs?: ReactNode; children: ReactNode }) {
   const { user, logout } = useAuth();
+  const [changingPassword, setChangingPassword] = useState(false);
 
   return (
     <div className="shell">
@@ -70,6 +72,15 @@ export function AppShell({ crumbs, children }: { crumbs?: ReactNode; children: R
                   </div>
                   <MenuSep />
                   <MenuItem
+                    icon={<KeyRound size={16} />}
+                    onClick={() => {
+                      close();
+                      setChangingPassword(true);
+                    }}
+                  >
+                    Alterar senha
+                  </MenuItem>
+                  <MenuItem
                     icon={<LogOut size={16} />}
                     onClick={() => {
                       close();
@@ -85,6 +96,7 @@ export function AppShell({ crumbs, children }: { crumbs?: ReactNode; children: R
         </div>
       </header>
       {children}
+      {changingPassword && <ChangePasswordModal onClose={() => setChangingPassword(false)} />}
     </div>
   );
 }

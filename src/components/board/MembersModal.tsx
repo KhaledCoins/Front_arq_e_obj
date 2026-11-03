@@ -12,16 +12,15 @@ import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { CopyId } from "@/components/ui/Misc";
 import { useBoard } from "./BoardContext";
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function MembersModal({ onClose }: { onClose: () => void }) {
   const { quadro, membros, me, isAdmin } = useBoard();
   const queryClient = useQueryClient();
   const toast = useToast();
-  const [usuarioId, setUsuarioId] = useState("");
+  const [email, setEmail] = useState("");
   const [papel, setPapel] = useState<Papel>("MEMBRO");
   const [removendo, setRemovendo] = useState<MembroQuadroView | null>(null);
 
@@ -31,11 +30,11 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
   };
 
   const adicionar = useMutation({
-    mutationFn: () => membroApi.criar(quadro.id, { usuarioId: usuarioId.trim(), papel }),
+    mutationFn: () => membroApi.criar(quadro.id, { email: email.trim().toLowerCase(), papel }),
     onSuccess: (m) => {
       invalidate();
       toast.success("Membro adicionado", m.usuario.email);
-      setUsuarioId("");
+      setEmail("");
       setPapel("MEMBRO");
     },
     onError: (e) => toast.error(e),
@@ -59,29 +58,18 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
     onError: (e) => toast.error(e),
   });
 
-  const idValido = UUID_RE.test(usuarioId.trim());
+  const emailValido = EMAIL_RE.test(email.trim());
+  const jaParticipa = membros.some((m) => m.usuario.email === email.trim().toLowerCase());
   const admins = membros.filter((m) => m.papel === "ADMIN").length;
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!idValido) return;
+    if (!emailValido || jaParticipa) return;
     adicionar.mutate();
   }
 
   return (
     <Modal open onClose={onClose} size="lg" title="Membros" subtitle={`${membros.length} ${membros.length === 1 ? "pessoa" : "pessoas"} neste quadro`}>
-      {me && (
-        <div className="callout">
-          <Info size={16} />
-          <div className="stack" style={{ gap: 6 }}>
-            <span>
-              Para convidar alguém, peça o <strong>ID de usuário</strong> dessa pessoa. Ela encontra o próprio ID aqui, em Membros.
-            </span>
-            <CopyId label="Seu ID" value={me.usuario.id} />
-          </div>
-        </div>
-      )}
-
       <div className="list">
         {membros.map((m) => {
           const isMe = m.id === me?.id;
@@ -137,7 +125,7 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
         })}
       </div>
 
-      {isAdmin && (
+      {isAdmin ? (
         <form className="stack" onSubmit={onSubmit}>
           <div className="section__title" style={{ marginTop: 4 }}>
             <UserPlus size={16} /> Adicionar membro
@@ -145,14 +133,14 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
           <div className="row" style={{ alignItems: "flex-start", gap: 10 }}>
             <div className="grow">
               <Input
-                placeholder="ID do usuário (UUID)"
-                value={usuarioId}
-                onChange={(e) => setUsuarioId(e.target.value)}
-                className="mono"
-                spellCheck={false}
+                type="email"
+                placeholder="e-mail da pessoa (precisa ter conta)"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 autoComplete="off"
-                error={usuarioId && !idValido ? "Formato de UUID inválido" : undefined}
-                aria-label="ID do usuário"
+                error={email && !emailValido ? "E-mail inválido" : jaParticipa ? "Essa pessoa já participa do quadro" : undefined}
+                aria-label="E-mail do usuário"
+                data-autofocus
               />
             </div>
             <div style={{ width: 130 }}>
@@ -161,12 +149,17 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
                 <option value="ADMIN">Admin</option>
               </Select>
             </div>
-            <Button variant="primary" type="submit" loading={adicionar.isPending} disabled={!idValido}>
+            <Button variant="primary" type="submit" loading={adicionar.isPending} disabled={!emailValido || jaParticipa}>
               Adicionar
             </Button>
           </div>
           <span className="field__hint">{PAPEL_META[papel].descricao}</span>
         </form>
+      ) : (
+        <div className="callout">
+          <Info size={16} />
+          <span>Só administradores convidam ou removem membros.</span>
+        </div>
       )}
 
       <ConfirmDialog

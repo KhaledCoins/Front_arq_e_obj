@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { useSortable } from "@dnd-kit/sortable";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, GripVertical, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
@@ -165,9 +165,11 @@ export function Column({ coluna, cards, index, total, dropState, onMove }: Colum
       </header>
 
       <div ref={drop.setNodeRef} className="column__body">
-        {cards.map((card) => (
-          <CardItem key={card.id} card={card} onOpen={(c) => openCard(c.id)} />
-        ))}
+        <SortableContext items={cards.map((c) => `card:${c.id}`)} strategy={verticalListSortingStrategy}>
+          {cards.map((card) => (
+            <CardItem key={card.id} card={card} onOpen={(c) => openCard(c.id)} />
+          ))}
+        </SortableContext>
         {cards.length === 0 && <div className="column__empty">Solte um card aqui</div>}
       </div>
 

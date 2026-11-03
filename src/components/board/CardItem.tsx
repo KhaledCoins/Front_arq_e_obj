@@ -1,5 +1,5 @@
 import { forwardRef, type CSSProperties, type HTMLAttributes } from "react";
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Clock, Gauge, ShieldAlert, Zap } from "lucide-react";
 import type { CardView } from "@/api/types";
@@ -80,7 +80,7 @@ interface CardItemProps {
 }
 
 export function CardItem({ card, onOpen }: CardItemProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `card:${card.id}`,
     data: { type: "card", card },
   });
@@ -90,7 +90,7 @@ export function CardItem({ card, onOpen }: CardItemProps) {
       ref={setNodeRef}
       card={card}
       dragging={isDragging}
-      style={{ transform: CSS.Translate.toString(transform) }}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
       {...attributes}
       {...listeners}
       role="button"

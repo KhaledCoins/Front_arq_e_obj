@@ -15,6 +15,8 @@ import { decodeJwt, isExpired } from "@/lib/jwt";
 interface AuthUser {
   email: string;
   exp?: number;
+  /** Preenchido via GET /usuarios/me após o login. */
+  id?: string;
 }
 
 interface AuthContextValue {
@@ -53,6 +55,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUnauthorizedHandler(logout);
     return () => setUnauthorizedHandler(null);
   }, [logout]);
+
+  // Completa o perfil (id) a partir do backend.
+  useEffect(() => {
+    if (!user || user.id) return;
+    let cancelled = false;
+    usuarioApi
+      .me()
+      .then((me) => {
+        if (!cancelled) setUser((prev) => (prev && !prev.id ? { ...prev, id: me.id } : prev));
+      })
+      .catch(() => {
+        /* o e-mail do token já basta para a UI */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   // Desloga automaticamente quando o token expira (1h por padrão no backend).
   useEffect(() => {

@@ -46,7 +46,7 @@ src/
 
 | Recurso        | Rotas                                                                                                   |
 | -------------- | ------------------------------------------------------------------------------------------------------- |
-| Usuário        | `POST /usuarios`, `POST /login`                                                                         |
+| Usuário        | `POST /usuarios`, `POST /login`, `GET /usuarios/me`, `PUT /usuarios/me/senha`                           |
 | Quadro         | `GET/POST /quadros`, `GET/PUT/DELETE /quadros/{id}`                                                     |
 | Coluna         | `GET/POST /quadros/{id}/colunas`, `PUT/DELETE /colunas/{id}`, `PATCH /colunas/{id}/posicao`             |
 | Card           | `GET/POST /colunas/{id}/cards`, `GET/PUT/DELETE /cards/{id}`, `PATCH …/mover`, `…/responsavel`, `…/prioridade`, `PUT/DELETE /cards/{id}/etiquetas/{etiquetaId}` |
@@ -60,7 +60,11 @@ Regras de domínio refletidas na UI: tipos de card (Tarefa com estimativa em hor
 
 ### Convidar membros
 
-A API não tem busca de usuários: `POST /quadros/{id}/membros` recebe o **UUID** do usuário. Cada pessoa vê o próprio ID em **Membros → Seu ID** e pode copiá-lo para quem vai convidar.
+`POST /quadros/{id}/membros` recebe o **e-mail** de uma pessoa que já tem conta. Em **Membros → Adicionar membro**, só administradores convidam, trocam papel ou removem.
+
+### Ordem dos cards
+
+`CardView.posicao` define a ordem dentro da coluna. `PATCH /cards/{id}/mover` aceita `posicao` opcional: na mesma coluna reordena; em outra coluna insere naquele índice (sem `posicao`, vai para o fim). O quadro usa isso para arrastar cards entre e dentro das colunas (mouse ou teclado: Espaço, setas, Espaço).
 
 ## Deploy na Vercel
 

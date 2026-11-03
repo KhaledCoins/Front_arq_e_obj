@@ -62,6 +62,7 @@ export function useCardsPorColuna(colunas: ColunaView[] | undefined) {
     queries: (colunas ?? []).map((c) => ({
       queryKey: qk.cardsDaColuna(c.id),
       queryFn: () => cardApi.listar(c.id),
+      select: (cards: CardView[]) => [...cards].sort((a, b) => a.posicao - b.posicao),
     })),
   }) as UseQueryResult<CardView[]>[];
 
