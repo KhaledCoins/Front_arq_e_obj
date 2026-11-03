@@ -1,0 +1,144 @@
+/* ------------------------------------------------------------------
+   Design tokens — Kanban
+   Base neutra "papel" quente, acento azul-cobalto, cores semânticas
+   para tipo de card e prioridade. Tema escuro via [data-theme="dark"].
+------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* Tipografia */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-md: 0.875rem;
+  --fs-lg: 1rem;
+  --fs-xl: 1.25rem;
+  --fs-2xl: 1.625rem;
+  --fs-3xl: 2.125rem;
+  --lh-tight: 1.2;
+  --lh-normal: 1.5;
+
+  /* Superfícies */
+  --bg: #f6f6f4;
+  --bg-elev: #ffffff;
+  --bg-sunken: #eeeeea;
+  --bg-hover: rgba(17, 17, 17, 0.04);
+  --bg-active: rgba(17, 17, 17, 0.08);
+  --border: #e4e2dc;
+  --border-strong: #cfcdc6;
+  --overlay: rgba(20, 20, 18, 0.45);
+
+  /* Texto */
+  --fg: #171716;
+  --fg-muted: #6a6a66;
+  --fg-faint: #9c9b95;
+  --fg-on-accent: #ffffff;
+
+  /* Acento */
+  --accent: #2f5bff;
+  --accent-hover: #1f47e6;
+  --accent-soft: #e9eefe;
+  --accent-ring: rgba(47, 91, 255, 0.35);
+
+  /* Semânticas */
+  --danger: #dc3b43;
+  --danger-hover: #c22e36;
+  --danger-soft: #fdeaea;
+  --success: #1f9d55;
+  --success-soft: #e4f6ec;
+  --warning: #d98a06;
+  --warning-soft: #fdf1dc;
+
+  /* Tipos de card */
+  --tipo-tarefa: #2f5bff;
+  --tipo-tarefa-soft: #e9eefe;
+  --tipo-bug: #dc3b43;
+  --tipo-bug-soft: #fdeaea;
+  --tipo-melhoria: #8a3ffc;
+  --tipo-melhoria-soft: #f1e9fe;
+
+  /* Prioridades */
+  --prio-baixa: #8b8b86;
+  --prio-baixa-soft: #efefeb;
+  --prio-media: #e39a1a;
+  --prio-media-soft: #fdf1dc;
+  --prio-alta: #dc3b43;
+  --prio-alta-soft: #fdeaea;
+
+  /* Forma */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-full: 999px;
+
+  --shadow-xs: 0 1px 2px rgba(17, 17, 17, 0.06);
+  --shadow-sm: 0 1px 2px rgba(17, 17, 17, 0.05), 0 2px 8px rgba(17, 17, 17, 0.05);
+  --shadow-md: 0 4px 12px rgba(17, 17, 17, 0.08), 0 1px 3px rgba(17, 17, 17, 0.06);
+  --shadow-lg: 0 18px 50px rgba(17, 17, 17, 0.18), 0 4px 12px rgba(17, 17, 17, 0.08);
+  --shadow-drag: 0 20px 40px rgba(17, 17, 17, 0.2), 0 6px 14px rgba(17, 17, 17, 0.12);
+
+  /* Movimento */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --dur-slow: 260ms;
+
+  /* Layout */
+  --topbar-h: 56px;
+  --column-w: 300px;
+  --content-max: 1200px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0f1012;
+  --bg-elev: #17181b;
+  --bg-sunken: #0b0c0e;
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-active: rgba(255, 255, 255, 0.09);
+  --border: #26282d;
+  --border-strong: #3a3d44;
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --fg: #ececea;
+  --fg-muted: #9c9c98;
+  --fg-faint: #6a6a68;
+  --fg-on-accent: #ffffff;
+
+  --accent: #6b8aff;
+  --accent-hover: #83a0ff;
+  --accent-soft: rgba(107, 138, 255, 0.16);
+  --accent-ring: rgba(107, 138, 255, 0.4);
+
+  --danger: #f06a70;
+  --danger-hover: #f58589;
+  --danger-soft: rgba(240, 106, 112, 0.16);
+  --success: #45c276;
+  --success-soft: rgba(69, 194, 118, 0.16);
+  --warning: #f0b04a;
+  --warning-soft: rgba(240, 176, 74, 0.16);
+
+  --tipo-tarefa: #6b8aff;
+  --tipo-tarefa-soft: rgba(107, 138, 255, 0.16);
+  --tipo-bug: #f06a70;
+  --tipo-bug-soft: rgba(240, 106, 112, 0.16);
+  --tipo-melhoria: #b07cff;
+  --tipo-melhoria-soft: rgba(176, 124, 255, 0.16);
+
+  --prio-baixa: #8d8d89;
+  --prio-baixa-soft: rgba(141, 141, 137, 0.18);
+  --prio-media: #f0b04a;
+  --prio-media-soft: rgba(240, 176, 74, 0.16);
+  --prio-alta: #f06a70;
+  --prio-alta-soft: rgba(240, 106, 112, 0.16);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 18px 50px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-drag: 0 20px 40px rgba(0, 0, 0, 0.65), 0 6px 14px rgba(0, 0, 0, 0.5);
+}
